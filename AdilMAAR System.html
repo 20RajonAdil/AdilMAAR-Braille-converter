@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AdilMAAR System</title>
+<style>
+:root {
+  --primary: #a78bfa;
+  --secondary: #22d3ee;
+  --bg: #05060a;
+  --surface: rgba(255,255,255,0.04);
+  --border: rgba(255,255,255,0.08);
+}
+
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background: var(--bg);
+  color: #eaeaea;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* BACKGROUND CANVAS */
+#bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+/* PAGE */
+.page {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 80px 24px;
+  box-sizing: border-box;
+}
+
+/* TITLE */
+.title {
+  font-size: 48px;
+  font-weight: 800;
+  margin: 0 0 8px 0;
+  text-align: center;
+  letter-spacing: -1px;
+}
+
+.gradient {
+  background: linear-gradient(90deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% 100%;
+  animation: gradient-shift 4s ease infinite;
+}
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+.subtitle {
+  margin: 0;
+  color: rgba(255,255,255,0.55);
+  font-size: 15px;
+  text-align: center;
+  max-width: 520px;
+  line-height: 1.5;
+}
+
+/* TOOL CONTAINER */
+.tool {
+  width: 100%;
+  max-width: 760px;
+  margin-top: 48px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* INPUT */
+textarea {
+  width: 100%;
+  min-height: 72px;
+  max-height: 280px;
+  padding: 18px 20px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: white;
+  font-size: 16px;
+  line-height: 1.65;
+  outline: none;
+  resize: none;
+  overflow: hidden;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(167, 139, 250, 0.15);
+}
+
+textarea::placeholder {
+  color: rgba(255,255,255,0.35);
+}
+
+/* ACTIONS */
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* MODE BADGE */
+.mode-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  font-size: 13px;
+  font-weight: 600;
+  color: #aaa;
+  margin-right: auto;
+}
+
+.mode-badge.active {
+  background: rgba(167, 139, 250, 0.15);
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.mode-badge .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* BUTTONS */
+button {
+  padding: 11px 20px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: #ddd;
+  font-size: 14.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.23, 1, 0.32, 1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+button:hover {
+  background: rgba(167, 139, 250, 0.12);
+  border-color: rgba(167, 139, 250, 0.3);
+  transform: translateY(-1px);
+}
+
+button:active {
+  transform: scale(0.985);
+}
+
+button.primary {
+  background: linear-gradient(90deg, var(--primary), #8b5cf6);
+  color: white;
+  border: none;
+}
+
+button.primary:hover {
+  filter: brightness(1.1);
+  box-shadow: 0 4px 15px rgba(167, 139, 250, 0.4);
+}
+
+/* OUTPUT */
+.output {
+  min-height: 92px;
+  padding: 22px 24px;
+  border-radius: 16px;
+  background: rgba(255,255,255,0.025);
+  border: 1px solid var(--border);
+  font-size: 22px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #f0e7ff;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.output:empty::before {
+  content: "Braille output will appear here...";
+  color: rgba(255,255,255,0.25);
+  font-size: 15px;
+}
+
+/* TOAST */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #111;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 9999px;
+  font-size: 14px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+  opacity: 0;
+  pointer-events: none;
+  transition: all 0.3s cubic-bezier(0.23, 1.0, 0.32, 1);
+  z-index: 999;
+  border: 1px solid var(--border);
+}
+
+.toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* RESPONSIVE */
+@media (max-width: 640px) {
+  .page { padding: 48px 16px; }
+  .title { font-size: 34px; }
+  .actions { flex-direction: column; }
+  button { width: 100%; }
+  .mode-badge { margin-right: 0; margin-bottom: 8px; width: 100%; justify-content: center; }
+}
+
+@media (min-width: 1600px) {
+  .title { font-size: 56px; }
+  .tool { max-width: 860px; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg"></canvas>
+
+<div class="page">
+  <h1 class="title">
+    Adil<span class="gradient">MAAR</span> System
+  </h1>
+  <p class="subtitle">
+    Adaptive Braille converter with a fluid modern interface.<br>
+    Type normally → get instant Braille. Toggle Reverse to decode.
+  </p>
+
+  <div class="tool">
+    <!-- INPUT -->
+    <textarea id="input" placeholder="Type your message here..." spellcheck="false"></textarea>
+
+    <!-- ACTIONS -->
+    <div class="actions">
+      <div class="mode-badge" id="modeBadge">
+        <span class="dot"></span>
+        <span id="modeText">Text → Braille</span>
+      </div>
+
+      <button onclick="convert()" class="primary">Convert</button>
+      <button onclick="copyText()">Copy</button>
+      <button onclick="clearAll()">Clear</button>
+      <button onclick="toggleMode()">Reverse Mode</button>
+    </div>
+
+    <!-- OUTPUT -->
+    <div class="output" id="output"></div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">Copied to clipboard!</div>
+
+<script>
+// ==================== BRAILLE MAPS ====================
+const brailleMap = {
+  a:'⠁', b:'⠃', c:'⠉', d:'⠙', e:'⠑',
+  f:'⠋', g:'⠛', h:'⠓', i:'⠊', j:'⠚',
+  k:'⠅', l:'⠇', m:'⠍', n:'⠝', o:'⠕',
+  p:'⠏', q:'⠟', r:'⠗', s:'⠎', t:'⠞',
+  u:'⠥', v:'⠧', w:'⠺', x:'⠭', y:'⠽', z:'⠵',
+  ' ':' ',
+  '.':'⠲', ',':'⠂', '?':'⠦', '!':'⠖',
+  '-':'⠤', ':':'⠒', ';':'⠆',
+  '"':'⠶', "'":'⠄',
+  '(':'⠷', ')':'⠾',
+  '/':'⠌'
+};
+
+const numberMap = {
+  '0':'⠚','1':'⠁','2':'⠃','3':'⠉','4':'⠙',
+  '5':'⠑','6':'⠋','7':'⠛','8':'⠓','9':'⠊'
+};
+
+// Reverse lookup
+const reverseMap = {};
+Object.entries({...brailleMap, ...numberMap}).forEach(([k, v]) => {
+  reverseMap[v] = k;
+});
+
+let reverseMode = false;
+
+// ==================== DOM ELEMENTS ====================
+const input = document.getElementById("input");
+const output = document.getElementById("output");
+const modeBadge = document.getElementById("modeBadge");
+const modeText = document.getElementById("modeText");
+const toast = document.getElementById("toast");
+
+// ==================== AUTO RESIZE TEXTAREA ====================
+function autoResizeTextarea() {
+  input.style.height = "auto";
+  const newHeight = Math.min(input.scrollHeight, 280);
+  input.style.height = newHeight + "px";
+}
+
+input.addEventListener("input", () => {
+  autoResizeTextarea();
+  convert(); // Live conversion
+});
+
+// ==================== CONVERSION LOGIC ====================
+function convert() {
+  const text = input.value;
+  let result = "";
+
+  if (!reverseMode) {
+    // Forward: Text → Braille
+    let numberMode = false;
+
+    for (let char of text.toLowerCase()) {
+      if (char >= '0' && char <= '9') {
+        if (!numberMode) {
+          result += brailleMap['#'] || '⠼'; // Number sign
+          numberMode = true;
+        }
+        result += numberMap[char];
+      } else {
+        numberMode = false;
+        result += brailleMap[char] || char;
+      }
+    }
+  } else {
+    // Reverse: Braille → Text
+    for (let char of text) {
+      result += reverseMap[char] || char;
+    }
+  }
+
+  output.innerText = result || "";
+}
+
+// ==================== MODE TOGGLE ====================
+function toggleMode() {
+  reverseMode = !reverseMode;
+
+  if (reverseMode) {
+    modeBadge.classList.add("active");
+    modeText.textContent = "Braille → Text";
+    input.placeholder = "Paste Braille here...";
+  } else {
+    modeBadge.classList.remove("active");
+    modeText.textContent = "Text → Braille";
+    input.placeholder = "Type your message here...";
+  }
+
+  convert();
+}
+
+// ==================== COPY ====================
+function copyText() {
+  const textToCopy = output.innerText.trim();
+  if (!textToCopy) return;
+
+  navigator.clipboard.writeText(textToCopy).then(() => {
+    showToast("Copied to clipboard!");
+  }).catch(() => {
+    // Fallback
+    const textarea = document.createElement("textarea");
+    textarea.value = textToCopy;
+    document.body.appendChild(textarea);
+    textarea.select();
+    document.execCommand("copy");
+    document.body.removeChild(textarea);
+    showToast("Copied to clipboard!");
+  });
+}
+
+// ==================== CLEAR ====================
+function clearAll() {
+  input.value = "";
+  output.innerText = "";
+  input.style.height = "auto";
+  input.focus();
+}
+
+// ==================== TOAST ====================
+function showToast(message) {
+  toast.textContent = message;
+  toast.classList.add("show");
+  
+  setTimeout(() => {
+    toast.classList.remove("show");
+  }, 2200);
+}
+
+// ==================== KEYBOARD SHORTCUTS ====================
+document.addEventListener("keydown", (e) => {
+  if (e.metaKey && e.key === "/") {
+    e.preventDefault();
+    input.focus();
+  }
+  
+  if (e.key === "Escape") {
+    if (document.activeElement === input) {
+      input.blur();
+    } else {
+      clearAll();
+    }
+  }
+});
+
+// ==================== CANVAS BACKGROUND ====================
+const canvas = document.getElementById("bg");
+const ctx = canvas.getContext("2d", { alpha: true });
+
+let particles = [];
+let animationFrame;
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+
+function createParticles(count = 42) {
+  particles = [];
+  for (let i = 0; i < count; i++) {
+    particles.push({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      size: Math.random() * 2.2 + 0.8,
+      speedX: (Math.random() - 0.5) * 0.35,
+      speedY: (Math.random() - 0.5) * 0.35,
+      opacity: Math.random() * 0.5 + 0.25
+    });
+  }
+}
+
+function drawBackground() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  // Subtle flowing particles
+  ctx.fillStyle = "#a78bfa";
+  
+  for (let p of particles) {
+    ctx.globalAlpha = p.opacity;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Gentle movement
+    p.x += p.speedX;
+    p.y += p.speedY;
+
+    // Wrap around edges
+    if (p.x < 0) p.x = canvas.width;
+    if (p.x > canvas.width) p.x = 0;
+    if (p.y < 0) p.y = canvas.height;
+    if (p.y > canvas.height) p.y = 0;
+
+    // Very subtle connection lines
+    for (let other of particles) {
+      const dx = p.x - other.x;
+      const dy = p.y - other.y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      
+      if (dist < 120 && dist > 10) {
+        ctx.strokeStyle = "#22d3ee";
+        ctx.globalAlpha = (1 - dist / 120) * 0.08;
+        ctx.lineWidth = 0.6;
+        ctx.beginPath();
+        ctx.moveTo(p.x, p.y);
+        ctx.lineTo(other.x, other.y);
+        ctx.stroke();
+      }
+    }
+  }
+  
+  ctx.globalAlpha = 1;
+  animationFrame = requestAnimationFrame(drawBackground);
+}
+
+function initBackground() {
+  resizeCanvas();
+  createParticles(48);
+  drawBackground();
+
+  window.addEventListener("resize", () => {
+    resizeCanvas();
+    createParticles(48);
+  });
+
+  // Pause animation when tab is hidden (performance)
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) {
+      cancelAnimationFrame(animationFrame);
+    } else {
+      drawBackground();
+    }
+  });
+}
+
+// ==================== INITIALIZE ====================
+function init() {
+  // Set initial mode
+  modeText.textContent = "Text → Braille";
+  
+  // Start live conversion
+  input.addEventListener("input", convert);
+  
+  // Initial resize
+  autoResizeTextarea();
+  
+  // Start beautiful background
+  initBackground();
+  
+  // Focus input on load
+  setTimeout(() => {
+    input.focus();
+  }, 800);
+  
+  // Easter egg: type "adil" to see a little surprise
+  let typed = "";
+  input.addEventListener("input", () => {
+    typed = (input.value.toLowerCase().slice(-4));
+    if (typed === "adil") {
+      output.style.transition = "all 0.4s ease";
+      output.style.boxShadow = "0 0 0 3px rgba(167,139,250,0.3)";
+      setTimeout(() => {
+        output.style.boxShadow = "0 8px 30px rgba(0,0,0,0.3)";
+      }, 1200);
+    }
+  });
+  
+  console.log("%c[AdilMAAR] System initialized successfully ✨", "color:#666");
+}
+
+init();
+</script>
+
+</body>
+</html>
